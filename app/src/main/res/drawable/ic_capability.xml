@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Neko 能力中心图标：能量方块（下载/安装能力）。tint 由 text_primary 控，与其他设置行对齐。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/text_primary">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2 L3,7 L3,17 L12,22 L21,17 L21,7 Z M12,4.3 L18.5,7.9 L12,11.5 L5.5,7.9 Z M5,9.6 L11,12.9 L11,19.3 L5,16 Z M13,19.3 L13,12.9 L19,9.6 L19,16 Z" />
+</vector>

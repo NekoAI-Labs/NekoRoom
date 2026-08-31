@@ -1,0 +1,38 @@
+diff --git a/live2d/build.gradle b/live2d/build.gradle
+--- a/live2d/build.gradle
++++ b/live2d/build.gradle
+@@ -3,6 +3,15 @@ plugins {
+     id 'org.jetbrains.kotlin.android'
+ }
+ 
++def singleFenmaoAssetsDir = layout.buildDirectory.dir('generated/singleFenmaoAssets')
++def prepareSingleFenmaoAssets = tasks.register('prepareSingleFenmaoAssets', Sync) {
++    from('src/main/assets') {
++        exclude 'Live2DModels/ATRI/**'
++        exclude 'Live2DModels/Ziyan/**'
++    }
++    into(singleFenmaoAssetsDir)
++}
++
+ android {
+     namespace 'com.chatwaifu.live2d'
+     compileSdk rootProject.ext.compileSdkVersion
+@@ -32,12 +41,17 @@ android {
+     }
+ 
+     sourceSets.main {
++        assets.setSrcDirs([singleFenmaoAssetsDir,
++                           'src/SDKRoot/Framework/src/Rendering/OpenGL/Shaders/StandardES'])
+         // SDK5: OpenGL 渲染器从文件加载着色器，把 StandardES 着色器源打进 assets 根目录，
+         // 渲染器按裸文件名（如 VertShaderSrc.vert）读取。
+-        assets.srcDirs += ['src/SDKRoot/Framework/src/Rendering/OpenGL/Shaders/StandardES']
+     }
+ }
+ 
++tasks.named('preBuild').configure {
++    dependsOn prepareSingleFenmaoAssets
++}
++
+ dependencies {
+     implementation 'androidx.core:core-ktx:1.13.1'
+ }

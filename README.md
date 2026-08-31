@@ -16,6 +16,33 @@ NekoRoom 是一个正在开发中的开源 AI 陪伴项目，关注自然对话�
 
 部分功能仍在实验或重构中，当前仓库不是完成版产品。
 
+## 默认模型
+
+应用会将模型保存到应用的 `models/` 目录下，下面是当前代码中的默认配置：
+
+| 能力 | 默认模型 | 模型仓库 | 设备目录（相对于 `models/`） |
+|---|---|---|---|
+| LLM | Neko 猫娘 v1.1 | [`jiaohui/qwen35_08b_nekoneko_v2.1-MNN`](https://modelscope.cn/models/jiaohui/qwen35_08b_nekoneko_v2.1-MNN) | `llm/qwen35_08b_nekoneko_v2.1-MNN/` |
+| TTS | NekoVoice 1.3 | [`jiaohui/NekoVoice-1.3`](https://modelscope.cn/models/jiaohui/NekoVoice-1.3) | `tts/v13-int8/` |
+| ASR | 语音识别 1.2 | [`jiaohui/zipformer-medium-MNN`](https://modelscope.cn/models/jiaohui/zipformer-medium-MNN) | `asr/medium-fp16/` |
+
+模型权重不随源码仓库发布，应用运行时按需下载或从本地补齐。模型及数据集仍需遵守各自的授权条款。
+
+## TTS 数据致谢
+
+感谢 [NekoAudio-80K](https://huggingface.co/datasets/liumindmind/Neko_Audio-80K_Shor) 数据集，为 NekoVoice 的训练和实验提供了帮助。
+
+## 核心项目致谢
+
+本项目的实现和运行依赖以下核心项目：
+
+- [MNN](https://github.com/alibaba/MNN)：端侧神经网络推理框架。
+- [sherpa-mnn](https://github.com/k2-fsa/sherpa-mnn)：语音识别及相关语音能力支持。
+- [SuperTonic](https://github.com/supertone-inc/supertonic)：端侧语音合成能力和推理流程参考。
+- [Live2D Cubism SDK](https://www.live2d.com/)：Live2D 角色渲染支持，须遵守官方授权条款。
+- [NekoAudio-80K](https://huggingface.co/datasets/liumindmind/Neko_Audio-80K_Shor)：NekoVoice 训练和实验使用的猫娘语音数据集。
+
+
 ## 初始源码计划
 
 第一份源码 PR 计划导入现有 NekoChat 实现，尽量保持原有结构，避免把大规模改名和功能变更混在同一个 PR 中。后续会单独处理包名、模块名、界面文字和资源名称迁移。

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 设置面板背景：顶部圆角磨砂（实底 + 玻璃边）。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/bg_deep" />
+            <corners android:topLeftRadius="24dp" android:topRightRadius="24dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/frost_surface" />
+            <corners android:topLeftRadius="24dp" android:topRightRadius="24dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,110 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// Deliberately outside the repository: losing this keystore means future updates cannot be
+// installed over an existing release, so back up ~/.config/nekochat privately.
+def releaseSigningProps = new Properties()
+def releaseSigningFile = new File(System.getProperty('user.home'), '.config/nekochat/release-signing.properties')
+if (releaseSigningFile.exists()) {
+    releaseSigningFile.withInputStream { releaseSigningProps.load(it) }
+}
+
+android {
+    namespace 'com.moeavatar'
+    compileSdk 35
+    ndkVersion "26.1.10909125"
+
+    defaultConfig {
+        applicationId "com.neko.chat"
+        minSdk 26
+        targetSdk 35
+        versionCode 10
+        versionName "0.6.7"
+        ndk {
+            //noinspection ChromeOsAbiSupport
+            abiFilters "arm64-v8a"
+        }
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+                arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                        "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+
+    signingConfigs {
+        release {
+            if (!releaseSigningProps.isEmpty()) {
+                storeFile file(releaseSigningProps['storeFile'])
+                storePassword releaseSigningProps['storePassword']
+                keyAlias releaseSigningProps['keyAlias']
+                keyPassword releaseSigningProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            if (releaseSigningProps.isEmpty()) {
+                throw new GradleException("Missing release signing config: ${releaseSigningFile}")
+            }
+            signingConfig signingConfigs.release
+            // Basic release hardening: make Java/Kotlin code less readable and remove unused
+            // bytecode/resources.  This is deliberately not model encryption: downloaded MNN
+            // weights must remain readable by the on-device runtime.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions { jvmTarget = "1.8" }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    androidResources {
+        noCompress += ['mnn', 'bin', 'json', 'txt']
+    }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+
+    implementation project(':live2d')
+    implementation project(':sherpa')
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    // Native p7zip extractor: covers ZIP, 7Z and RAR model packages.
+    implementation 'com.github.hzy3774:AndroidP7zip:v1.7.1'
+
+    testImplementation 'junit:junit:4.13.2'
+}

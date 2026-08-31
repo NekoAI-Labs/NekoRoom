@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 暗玻璃药丸输入栏（v3.3，圆角 28dp）：
+     深黑紫 Fill(58~65%) + 顶部一条细高光 + 极弱噪点 + 若隐若现 1px 描边。
+     悬浮感靠 layout 的黑色 elevation 阴影，不靠发光框。不做 blur（GL 表面采样不到），
+     暗 Fill 已足够撑起玻璃质感。参数取自设计规范。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 1. 深色 Fill：上 rgba(28,24,36,.58) → 下 rgba(18,16,24,.65)，带一点紫调 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="@color/glass_fill_top"
+                android:endColor="@color/glass_fill_bottom" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <!-- 2. 顶部细高光：仅顶端一条 8% 柔光 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="90"
+                android:startColor="#00FFFFFF"
+                android:endColor="@color/glass_sheen_top" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <!-- 3. 极弱噪点磨砂颗粒（tile 平铺，2~5% 可见度，不该一眼看到） -->
+    <item>
+        <bitmap
+            android:src="@drawable/noise_tile"
+            android:tileMode="repeat"
+            android:alpha="0.04" />
+    </item>
+    <!-- 4. 若隐若现 1px 白描边（10%，非发光框） -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+            <stroke android:width="1dp" android:color="@color/glass_edge" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+</layer-list>

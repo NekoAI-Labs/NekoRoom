@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+apply from: '../app_version.gradle'
+
+android {
+    namespace 'com.k2fsa.sherpa.mnn'
+    compileSdk compileSdkVer
+    ndkVersion ndkVer
+
+    defaultConfig {
+        minSdk minSdkVer
+        targetSdk targetSdkVer
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+        externalNativeBuild {
+            cmake {
+                // libsherpa_cxxshim.so 是个 ~10KB 的引子，唯一作用是把 libc++_shared.so
+                // 拖进进程 namespace（它的 ELF NEEDED 段直接列了 c++_shared，dlopen 时 linker
+                // 会自动把 c++_shared 加进同一 namespace）。
+                // 之后再 load libsherpa-mnn-jni.so（动态链 c++_shared 但自身 NEEDED 段没声明）
+                // 就能正常解析 std::__ndk1::* 符号。
+                arguments "-DANDROID_STL=c++_shared"
+                cppFlags "-std=c++17 -frtti -fexceptions"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    androidResources {
+        noCompress += ['mnn', 'bin', 'json', 'txt', 'onnx']
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'org.json:json:20240303'
+}

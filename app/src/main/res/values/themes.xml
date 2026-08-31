@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.MoeAvatar" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- 主色：淡粉 #D9A6BC -->
+        <item name="colorPrimary">@color/accent_pink</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorPrimaryContainer">@color/accent_pink_dim</item>
+        <item name="colorOnPrimaryContainer">@color/bg_deep</item>
+        <item name="colorSecondary">@color/text_secondary</item>
+        <item name="colorOnSecondary">@color/bg_deep</item>
+
+        <!-- 全屏沉浸：系统栏透明，内容铺到栏后（栏由 WindowInsetsController 隐藏） -->
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
+
+        <!-- 启动背景：直接深紫灰，避免白闪 -->
+        <item name="android:windowBackground">@color/bg_deep</item>
+    </style>
+</resources>

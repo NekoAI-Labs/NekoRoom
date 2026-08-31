@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  v3「沉浸陪伴」布局（去聊天化）：
+  背景 + Live2D 角色为绝对主体，UI 极简悬浮。
+  - 角色下方一条共享悬浮字幕（无盒子，靠阴影可读），AI/用户复用，1-2s 淡出，不留历史
+  - 底部磨砂胶囊输入栏：左 mic / 中输入 / 右 send
+  - 右上角磨砂齿轮 → 设置 BottomSheet
+  全屏沉浸（状态栏+导航栏由 WindowInsetsController 隐藏）。
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_deep">
+
+    <!-- 背景层（fallback）：主路径背景在 GL 渲（见 Live2DController.setBackgroundBitmap） -->
+    <ImageView
+        android:id="@+id/iv_background"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:src="@color/bg_deep" />
+
+    <!-- Live2D 全屏面板 (GLSurfaceView 在 Activity onCreate 时 add 进去) -->
+    <FrameLayout
+        android:id="@+id/live2d_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 左上角时间：沉浸模式隐藏了系统状态栏，补一个低存在感自绘时钟 -->
+    <TextClock
+        android:id="@+id/tv_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="20dp"
+        android:format24Hour="HH:mm"
+        android:textColor="@color/text_secondary"
+        android:textSize="15sp"
+        android:letterSpacing="0.02"
+        android:shadowColor="#99000000"
+        android:shadowRadius="4"
+        android:shadowDx="0"
+        android:shadowDy="1"
+        android:elevation="6dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="18:57" />
+
+    <!-- Persistent low-profile disclosure; kept away from the Live2D focal area. -->
+    <TextView
+        android:id="@+id/tv_ai_generated_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_ai_badge"
+        android:elevation="6dp"
+        android:paddingStart="8dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="4dp"
+        android:text="@string/ai_generated_badge"
+        android:textColor="@color/text_tertiary"
+        android:textSize="10sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_clock" />
+
+    <!-- 右上角磨砂齿轮设置入口 -->
+    <ImageButton
+        android:id="@+id/btn_settings"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:padding="8dp"
+        android:background="@drawable/bg_frosted_circle"
+        android:src="@drawable/ic_settings"
+        android:scaleType="centerInside"
+        android:elevation="8dp"
+        android:outlineProvider="background"
+        android:outlineSpotShadowColor="@color/glass_glow"
+        android:outlineAmbientShadowColor="@color/glass_glow"
+        android:contentDescription="设置"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 共享悬浮字幕：紧贴输入栏上方的半透明小长条；ASR/文字输入与 AI 播放字幕复用 -->
+    <TextView
+        android:id="@+id/tv_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="300dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="90dp"
+        android:background="@drawable/bg_subtitle_strip"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingTop="9dp"
+        android:paddingBottom="9dp"
+        android:gravity="center"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:lineSpacingExtra="2dp"
+        android:shadowColor="#99000000"
+        android:shadowRadius="4"
+        android:shadowDx="0"
+        android:shadowDy="1"
+        android:alpha="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:alpha="1"
+        tools:text="今天辛苦啦喵~ 感觉主人今天有点累呢。" />
+
+    <!-- 性能小字（悬浮，右下，默认隐藏） -->
+    <TextView
+        android:id="@+id/tv_perf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="6dp"
+        android:textColor="@color/perf_text"
+        android:textSize="10sp"
+        android:alpha="0.7"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/ll_input_bar"
+        app:layout_constraintBottom_toTopOf="@id/ll_input_bar"
+        tools:text="LLM 首字 120ms · 20 tok/s"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/tv_voice_gesture_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="@string/voice_release_or_cancel"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:shadowColor="#99000000"
+        android:shadowRadius="4"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/ll_input_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="visible" />
+
+    <!-- V0.6 keeps the original frosted capsule; only its inner interaction changes. -->
+    <LinearLayout
+        android:id="@+id/ll_input_bar"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:background="@drawable/bg_capsule_input"
+        android:elevation="8dp"
+        android:outlineProvider="background"
+        android:outlineSpotShadowColor="@color/glass_glow"
+        android:outlineAmbientShadowColor="@color/glass_glow"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btn_mic"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_call"
+            app:tint="@color/accent_pink"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/voice_mode" />
+
+        <FrameLayout
+            android:id="@+id/voice_input_area"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp">
+
+            <TextView
+                android:id="@+id/tv_voice_prompt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/voice_hold_to_talk"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp" />
+
+            <com.moeavatar.voiceinteraction.VoiceWaveformView
+                android:id="@+id/voice_waveform"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/edit_input"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:hint="@string/text_chat_hint"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
+                android:textSize="15sp"
+                android:imeOptions="actionSend"
+                android:inputType="text|textCapSentences"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:visibility="gone"
+                android:autofillHints="" />
+        </FrameLayout>
+
+        <ImageButton
+            android:id="@+id/btn_send"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_keyboard"
+            app:tint="@color/accent_pink"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/switch_to_text_input" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/phone_call_controls"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="20dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        <ImageButton
+            android:id="@+id/btn_call_mute"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_mic"
+            app:tint="@color/text_primary"
+            android:contentDescription="静音" />
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1">
+            <com.moeavatar.phonecall.CallPulseView
+                android:id="@+id/call_pulse"
+                android:layout_width="104dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center" />
+            <ImageButton
+                android:id="@+id/btn_call_interrupt"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_frosted_circle"
+                android:contentDescription="停止播放"
+                android:src="@drawable/ic_stop"
+                app:tint="@color/text_primary"
+                android:visibility="gone" />
+        </FrameLayout>
+        <ImageButton
+            android:id="@+id/btn_call_hangup"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_call_end"
+            app:tint="@color/error_red"
+            android:contentDescription="挂断" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_call_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:alpha="0.88"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:shadowColor="#CC000000"
+        android:shadowDx="0"
+        android:shadowDy="1"
+        android:shadowRadius="4"
+        android:textColor="@color/text_primary"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/phone_call_controls"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Same-window first-run disclosure keeps the Live2D Surface visible behind it. -->
+    <FrameLayout
+        android:id="@+id/ai_disclosure_overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#73000000"
+        android:clickable="true"
+        android:elevation="24dp"
+        android:focusable="true"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_sheet"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="欢迎来到 NekoChat"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="小喵是由 AI 驱动的虚拟角色，并非真人。回复内容由 AI 生成，可能存在不准确或不适宜内容，请理性判断并遵守社区规范。"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btn_ai_disclosure_confirm"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="@color/accent_pink"
+                android:text="我知道了"
+                android:textAllCaps="false"
+                android:textColor="@color/bg_deep" />
+        </LinearLayout>
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

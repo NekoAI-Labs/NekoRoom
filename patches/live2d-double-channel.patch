@@ -1,0 +1,381 @@
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/build.gradle NekoChatMini/live2d/build.gradle
+--- a/build.gradle	2026-07-09 08:55:10.693633715 +0800
++++ b/build.gradle	2026-07-09 22:04:18.419144115 +0800
+@@ -34,6 +34,7 @@
+             version '3.18.1'
+         }
+     }
++
+     sourceSets.main {
+         // SDK5: OpenGL 渲染器从文件加载着色器，把 StandardES 着色器源打进 assets 根目录，
+         // 渲染器按裸文件名（如 VertShaderSrc.vert）读取。
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/src/main/cpp/JniBridgeC.cpp NekoChatMini/live2d/src/main/cpp/JniBridgeC.cpp
+--- a/src/main/cpp/JniBridgeC.cpp	2026-07-10 10:17:30.732968801 +0800
++++ b/src/main/cpp/JniBridgeC.cpp	2026-07-18 22:59:44.296151004 +0800
+@@ -183,15 +183,11 @@
+     env->ReleaseStringUTFChars(expression_name, expressionName);
+ }
+ JNIEXPORT void JNICALL
+-Java_com_chatwaifu_live2d_JniBridgeJava_nativeToggleExpression(JNIEnv *env, jclass clazz,
+-                                                               jstring expression_name, jboolean on) {
+-    auto expressionName = env->GetStringUTFChars(expression_name, nullptr);
+-    LAppDelegate::GetInstance()->ToggleExpression(expressionName, on == JNI_TRUE);
+-    env->ReleaseStringUTFChars(expression_name, expressionName);
+-}
+-JNIEXPORT void JNICALL
+-Java_com_chatwaifu_live2d_JniBridgeJava_nativeClearExpressions(JNIEnv *env, jclass clazz) {
+-    LAppDelegate::GetInstance()->ClearExpressions();
++Java_com_chatwaifu_live2d_JniBridgeJava_nativeApplyOutfit(JNIEnv *env, jclass clazz,
++                                                          jstring outfit_name) {
++    auto outfitName = env->GetStringUTFChars(outfit_name, nullptr);
++    LAppDelegate::GetInstance()->ApplyOutfit(outfitName);
++    env->ReleaseStringUTFChars(outfit_name, outfitName);
+ }
+ JNIEXPORT void JNICALL
+ Java_com_chatwaifu_live2d_JniBridgeJava_needRenderBack(JNIEnv *env, jclass clazz, jboolean back) {
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/src/main/cpp/LAppDelegate.cpp NekoChatMini/live2d/src/main/cpp/LAppDelegate.cpp
+--- a/src/main/cpp/LAppDelegate.cpp	2026-07-10 10:17:08.072955965 +0800
++++ b/src/main/cpp/LAppDelegate.cpp	2026-07-18 22:58:00.465721363 +0800
+@@ -92,12 +92,10 @@
+     // 時間更新
+     LAppPal::UpdateTime();
+ 
+-    // 画面の初期化
+-    // v27: matte 黑 #161618 = (22, 22, 24) / 255 ≈ (0.086, 0.086, 0.094)。
+-    // 之前 (0,0,0,0) 纯黑看起来太"死"，用户要塑料哑光感。alpha=1.0 是因为
+-    // GPU 强制 surface 不透明（v25 诊断的 Redmi K70 / HyperOS 15 已知问题），
+-    // alpha 在不透明合成下被忽略，但显式写 1.0 让代码意图更清楚。
+-    glClearColor(0.086f, 0.086f, 0.094f, 1.0f);
++    // v27 改 v2-月夜猫娘: GLSurfaceView 改成透明，让底下的 ImageView(room_default.png
++    // + 45% 蒙版)透出来。alpha=0 → framebuffer 透明 → 角色画在原位，背景由 Android 层提供。
++    // 老 0.086 哑黑方案是 HyperOS 强制不透明时的退化路径（已不需要）。
++    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+     glClearDepthf(1.0f);
+ 
+@@ -278,19 +276,11 @@
+     }
+ }
+ 
+-void LAppDelegate::ToggleExpression(const char *expressionName, bool on)
++void LAppDelegate::ApplyOutfit(const char *outfitName)
+ {
+     if (_view != NULL)
+     {
+-        _view->ToggleExpression(expressionName, on);
+-    }
+-}
+-
+-void LAppDelegate::ClearExpressions()
+-{
+-    if (_view != NULL)
+-    {
+-        _view->ClearExpressions();
++        _view->ApplyOutfit(outfitName);
+     }
+ }
+ 
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/src/main/cpp/LAppDelegate.hpp NekoChatMini/live2d/src/main/cpp/LAppDelegate.hpp
+--- a/src/main/cpp/LAppDelegate.hpp	2026-07-10 10:13:41.804966245 +0800
++++ b/src/main/cpp/LAppDelegate.hpp	2026-07-18 22:57:53.096567130 +0800
+@@ -11,7 +11,6 @@
+ #include <GLES2/gl2ext.h>
+ #include "LAppAllocator.hpp"
+ #include <string>
+-#include <set>
+ 
+ class LAppView;
+ class LAppTextureManager;
+@@ -22,7 +21,10 @@
+     bool changeExpression = false;
+     bool stopExpression = false;
+     std::string nextExpressionName = "";
+-    std::set<std::string> activeExpressions;  ///< 持续叠加的开关/表情（可多个同时生效）
++
++    // v0.5 M2 · Outfit channel（第二条 ExpressionManager，独立于 emotion）
++    bool changeOutfit = false;
++    std::string nextOutfitName = "";
+ 
+     float modelScale = 1.0f;               ///< モデル表示倍率
+     float modelTranslateX = 0.0f;          ///< モデル表示位置X
+@@ -150,9 +152,11 @@
+ 
+     void ApplyExpression(const char* expressionName);
+ 
+-    void ToggleExpression(const char* expressionName, bool on);
+-
+-    void ClearExpressions();
++    /**
++     * v0.5 M2 · Outfit 通道：与 ApplyExpression 独立的第二条 ExpressionManager，
++     * 参数集互不覆盖 —— outfit persistent，emotion transient，两者同帧叠加渲染。
++     */
++    void ApplyOutfit(const char* outfitName);
+ 
+     void NeedRenderBack(bool render);
+ 
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/src/main/cpp/LAppModel.cpp NekoChatMini/live2d/src/main/cpp/LAppModel.cpp
+--- a/src/main/cpp/LAppModel.cpp	2026-07-11 12:03:35.556679544 +0800
++++ b/src/main/cpp/LAppModel.cpp	2026-07-18 22:59:33.557325312 +0800
+@@ -14,7 +14,6 @@
+ #include <CubismDefaultParameterId.hpp>
+ #include <Rendering/OpenGL/CubismRenderer_OpenGLES2.hpp>
+ #include <Utils/CubismString.hpp>
+-#include <Utils/CubismJson.hpp>
+ #include <Id/CubismIdManager.hpp>
+ #include <Motion/CubismMotionQueueEntry.hpp>
+ #include "LAppDefine.hpp"
+@@ -53,6 +52,7 @@
+     : CubismUserModel()
+     , _modelSetting(NULL)
+     , _userTimeSeconds(0.0f)
++    , _outfitExpressionManager(NULL)
+ {
+     if (DebugLogEnable)
+     {
+@@ -69,6 +69,9 @@
+     _idParamEyeROpen = CubismFramework::GetIdManager()->GetId(ParamEyeROpen);
+     _idParamMouthForm = CubismFramework::GetIdManager()->GetId(ParamMouthForm);
+     _idParamMouthOpenY = CubismFramework::GetIdManager()->GetId(ParamMouthOpenY);
++
++    // v0.5 M2 · outfit 通道的第二条 ExpressionManager
++    _outfitExpressionManager = CSM_NEW CubismExpressionMotionManager();
+ }
+ 
+ LAppModel::~LAppModel()
+@@ -84,6 +87,13 @@
+         ReleaseMotionGroup(group);
+     }
+     delete _modelSetting;
++
++    // v0.5 M2 · outfit ExpressionManager；motion 对象归 _expressions 拥有，这里只销毁管线
++    if (_outfitExpressionManager != NULL)
++    {
++        CSM_DELETE(_outfitExpressionManager);
++        _outfitExpressionManager = NULL;
++    }
+ }
+ 
+ bool LAppModel::LoadAssets(const csmChar* dir, const csmChar* fileName)
+@@ -106,9 +116,7 @@
+ 
+         if (SetupModel(setting))
+         {
+-            // maskBufferCount=2：EmoCat 有 50 组裁剪蒙版，单缓冲(≈36)装不下会丢蒙版→
+-            // 脖子等区域裁剪错乱（设备实测确认）。双缓冲 ≈64 才够。对蒙版少的模型(粉毛萝莉)也安全。
+-            CreateRenderer(LAppDelegate::GetInstance()->GetWindowWidth(), LAppDelegate::GetInstance()->GetWindowHeight(), 2);
++            CreateRenderer(LAppDelegate::GetInstance()->GetWindowWidth(), LAppDelegate::GetInstance()->GetWindowHeight());
+             SetupTextures();
+             return true;
+         }
+@@ -198,26 +206,6 @@
+                 }
+                 _expressions[name] = motion;
+                 JniBridgeC::OnLoadOneExpression(name.GetRawString(), i);
+-
+-                // 叠加式开关：解析 exp3 的 Parameters 增量，供每帧直接叠加使用
+-                Utils::CubismJson* json = Utils::CubismJson::Create(reinterpret_cast<const csmByte*>(buffer), size);
+-                if (json != NULL)
+-                {
+-                    Utils::Value& params = json->GetRoot()[csmString("Parameters")];
+-                    if (params.IsArray())
+-                    {
+-                        csmVector<ExpressionDelta> deltas;
+-                        for (csmUint32 p = 0; p < static_cast<csmUint32>(params.GetSize()); ++p)
+-                        {
+-                            ExpressionDelta d;
+-                            d.id = CubismFramework::GetIdManager()->GetId(params[p][csmString("Id")].GetRawString());
+-                            d.value = params[p][csmString("Value")].ToFloat();
+-                            deltas.PushBack(d);
+-                        }
+-                        _expressionDeltas[name] = deltas;
+-                    }
+-                    Utils::CubismJson::Delete(json);
+-                }
+             }
+             else
+             {
+@@ -500,6 +488,12 @@
+         _expressionManager->UpdateMotion(_model, deltaTimeSeconds); // 表情でパラメータ更新（相対変化）
+     }
+ 
++    // v0.5 M2 · outfit 通道：与 emotion 并行 tick，参数加性叠加
++    if (_outfitExpressionManager != NULL)
++    {
++        _outfitExpressionManager->UpdateMotion(_model, deltaTimeSeconds);
++    }
++
+     if (parameters.changeExpression) {
+         if (_debugMode)
+         {
+@@ -508,19 +502,12 @@
+         SetExpression(parameters.nextExpressionName.c_str());
+     }
+ 
+-    // 叠加式表情/开关：把每个激活项的参数增量直接加到模型（可多个同时叠加，即时开关）
+-    for (std::set<std::string>::const_iterator it = parameters.activeExpressions.begin();
+-         it != parameters.activeExpressions.end(); ++it)
+-    {
+-        csmString key(it->c_str());
+-        if (_expressionDeltas.IsExist(key))
++    if (parameters.changeOutfit) {
++        if (_debugMode)
+         {
+-            csmVector<ExpressionDelta>& deltas = _expressionDeltas[key];
+-            for (csmUint32 j = 0; j < deltas.GetSize(); ++j)
+-            {
+-                _model->AddParameterValue(deltas[j].id, deltas[j].value);
+-            }
++            LAppPal::PrintLog("[APP]try start outfit: %s.", parameters.nextOutfitName.c_str());
+         }
++        SetOutfit(parameters.nextOutfitName.c_str());
+     }
+ 
+     //ドラッグによる変化
+@@ -727,6 +714,24 @@
+     }
+ }
+ 
++void LAppModel::SetOutfit(const csmChar* outfitID)
++{
++    ACubismMotion* motion = _expressions[outfitID];
++    if (_debugMode)
++    {
++        LAppPal::PrintLog("[APP]outfit: [%s]", outfitID);
++    }
++
++    if (motion != NULL && _outfitExpressionManager != NULL)
++    {
++        _outfitExpressionManager->StartMotion(motion, false);
++    }
++    else
++    {
++        if (_debugMode) LAppPal::PrintLog("[APP]outfit[%s] is null ", outfitID);
++    }
++}
++
+ void LAppModel::SetRandomExpression()
+ {
+     if (_expressions.GetSize() == 0)
+@@ -753,8 +758,7 @@
+ {
+     DeleteRenderer();
+ 
+-    // maskBufferCount=2：与加载路径保持一致（EmoCat 50 组蒙版需双缓冲，见 LoadAssets）
+-    CreateRenderer(LAppDelegate::GetInstance()->GetWindowWidth(), LAppDelegate::GetInstance()->GetWindowHeight(), 2);
++    CreateRenderer(LAppDelegate::GetInstance()->GetWindowWidth(), LAppDelegate::GetInstance()->GetWindowHeight());
+ 
+     SetupTextures();
+ }
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/src/main/cpp/LAppModel.hpp NekoChatMini/live2d/src/main/cpp/LAppModel.hpp
+--- a/src/main/cpp/LAppModel.hpp	2026-07-10 10:10:13.256992677 +0800
++++ b/src/main/cpp/LAppModel.hpp	2026-07-18 22:58:52.082611299 +0800
+@@ -12,6 +12,7 @@
+ #include <ICubismModelSetting.hpp>
+ #include <Type/csmRectF.hpp>
+ #include <Rendering/OpenGL/CubismRenderTarget_OpenGLES2.hpp>
++#include <Motion/CubismExpressionMotionManager.hpp>
+ #include "LAppDelegate.hpp"
+ 
+ /**
+@@ -87,6 +88,13 @@
+     void SetExpression(const Csm::csmChar* expressionID);
+ 
+     /**
++     * v0.5 M2 · outfit 通道：把 [_expressions] 里同名 motion 送入 [_outfitExpressionManager]
++     * （独立于 emotion 的 _expressionManager）。因为两条管线各自 UpdateMotion，
++     * 参数集不冲突时 outfit + emotion 会在同一帧叠加渲染。
++     */
++    void SetOutfit(const Csm::csmChar* outfitID);
++
++    /**
+      * @brief   ランダムに選ばれた表情モーションをセットする
+      *
+      */
+@@ -174,9 +182,13 @@
+     Csm::csmMap<Csm::csmString, Csm::ACubismMotion*>   _motions; ///< 読み込まれているモーションのリスト
+     Csm::csmMap<Csm::csmString, Csm::ACubismMotion*>   _expressions; ///< 読み込まれている表情のリスト
+ 
+-    /// 叠加式开关：把 exp3 的参数增量解析出来，每帧对激活项直接 AddParameterValue（可多个同时叠加）
+-    struct ExpressionDelta { Csm::CubismIdHandle id; Csm::csmFloat32 value; };
+-    Csm::csmMap<Csm::csmString, Csm::csmVector<ExpressionDelta> > _expressionDeltas;
++    /**
++     * v0.5 M2 · outfit 通道的第二条 ExpressionManager，与基类继承的 _expressionManager
++     * 并行运行 —— 每帧两个 manager 都 UpdateMotion，参数写回是加性的，因此 outfit
++     * 与 emotion 只要选到参数不同的 exp3.json 就不会互相覆盖。共用同一份 _expressions
++     * motion 对象池（motion 对象本身无状态，per-manager 队列各自记时）。
++     */
++    Csm::CubismExpressionMotionManager* _outfitExpressionManager;
+     Csm::csmVector<Csm::csmRectF> _hitArea;
+     Csm::csmVector<Csm::csmRectF> _userArea;
+     const Csm::CubismId* _idParamAngleX; ///< パラメータID: ParamAngleX
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/src/main/cpp/LAppView.cpp NekoChatMini/live2d/src/main/cpp/LAppView.cpp
+--- a/src/main/cpp/LAppView.cpp	2026-07-10 10:14:25.416992028 +0800
++++ b/src/main/cpp/LAppView.cpp	2026-07-18 22:58:24.027128623 +0800
+@@ -269,6 +269,7 @@
+     // Cubism更新・描画
+     Live2DManager->OnUpdate(_modelParameters);
+     _modelParameters.changeExpression = false;
++    _modelParameters.changeOutfit = false;
+ 
+     // 关闭 scissor（Render 结尾清理，避免影响后续 on-screen 渲染）
+     if (_scissorBottom > 0.0f) {
+@@ -464,16 +465,9 @@
+     _modelParameters.nextExpressionName = expressionName;
+ }
+ 
+-void LAppView::ToggleExpression(const char* expressionName, bool on) {
+-    if (on) {
+-        _modelParameters.activeExpressions.insert(expressionName);
+-    } else {
+-        _modelParameters.activeExpressions.erase(expressionName);
+-    }
+-}
+-
+-void LAppView::ClearExpressions() {
+-    _modelParameters.activeExpressions.clear();
++void LAppView::ApplyOutfit(const char* outfitName) {
++    _modelParameters.changeOutfit = true;
++    _modelParameters.nextOutfitName = outfitName;
+ }
+ 
+ void LAppView::NeedRenderBack(bool needRender) {
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/src/main/cpp/LAppView.hpp NekoChatMini/live2d/src/main/cpp/LAppView.hpp
+--- a/src/main/cpp/LAppView.hpp	2026-07-10 10:15:58.344956073 +0800
++++ b/src/main/cpp/LAppView.hpp	2026-07-18 22:58:07.038544414 +0800
+@@ -152,9 +152,7 @@
+ 
+     void ApplyExpression(const char* expressionName);
+ 
+-    void ToggleExpression(const char* expressionName, bool on);
+-
+-    void ClearExpressions();
++    void ApplyOutfit(const char* outfitName);
+ 
+     void NeedRenderBack(bool needRender);
+ 
+diff -urN '--exclude=build' '--exclude=.cxx' '--exclude=*.moc3' '--exclude=*.png' '--exclude=Framework' '--exclude=Core' '--exclude=SDKRoot' '--exclude=Live2DModels' '--exclude=assets' AvatarLive2DMini/live2d/src/main/java/com/chatwaifu/live2d/JniBridgeJava.java NekoChatMini/live2d/src/main/java/com/chatwaifu/live2d/JniBridgeJava.java
+--- a/src/main/java/com/chatwaifu/live2d/JniBridgeJava.java	2026-07-10 10:18:22.712951571 +0800
++++ b/src/main/java/com/chatwaifu/live2d/JniBridgeJava.java	2026-07-18 22:59:50.528757357 +0800
+@@ -52,9 +52,8 @@
+ 
+     public static native void nativeApplyExpression(String expressionName);
+ 
+-    public static native void nativeToggleExpression(String expressionName, boolean on);
+-
+-    public static native void nativeClearExpressions();
++    /** v0.5 M2: outfit 通道，走独立 ExpressionManager，参数集不与 emotion 冲突。 */
++    public static native void nativeApplyOutfit(String outfitName);
+ 
+     public static native void needRenderBack(boolean back);
+ 
+@@ -124,7 +123,9 @@
+     }
+ 
+     public static void MoveTaskToBack() {
+-        _activityInstance.moveTaskToBack(true);
++        // 聊天 App 不做 Live2D sample 的"电源键→最小化"行为，且 _activityInstance 从未注入
++        // （注入了也不想 tap 头像就把 App 切后台）——空实现兜底，避免 NPE 闪退。
++        if (_activityInstance != null) _activityInstance.moveTaskToBack(true);
+     }
+ 
+     public static void OnLoadError() {

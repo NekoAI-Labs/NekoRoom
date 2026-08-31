@@ -1,0 +1,17 @@
+# NekoChat v0.6.1 internal-test vocabulary: political figures and sensitive events
+习近平
+习主席
+习总书记
+李强总理
+毛泽东
+毛主席
+邓小平
+六四事件
+天安门事件
+八九学运
+文化大革命
+法轮功
+台独
+港独
+藏独
+疆独

@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 在线模型 / 语音配置（BottomSheet 内容，磨砂主题，与设置面板统一）。 -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="24dp">
+
+        <!-- 顶部拖拽指示条 -->
+        <View
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:background="@color/frost_border" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="在线模型 / 语音"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LLM 后端"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:paddingTop="8dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_backend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rb_local"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="本地"
+                android:textColor="@color/text_primary" />
+
+            <RadioButton
+                android:id="@+id/rb_openai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:text="在线 API"
+                android:textColor="@color/text_primary" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="服务商"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:paddingTop="8dp" />
+
+        <Spinner
+            android:id="@+id/sp_provider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_input"
+            android:minHeight="48dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:popupBackground="@drawable/bg_model_dropdown" />
+
+        <EditText
+            android:id="@+id/et_oai_base"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:hint="API 地址（例：https://api.deepseek.com/v1）"
+            android:inputType="textUri"
+            android:maxLines="1"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_oai_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:hint="sk-...（长按此处粘贴）"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_oai_model"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:hint="模型名（如 deepseek-v4-flash）"
+            android:inputType="text"
+            android:maxLines="1"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btn_test_conn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_btn_outline"
+            android:minHeight="44dp"
+            android:stateListAnimator="@null"
+            android:text="测试连通性"
+            android:textColor="@color/accent_pink"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_test_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_advanced_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="12dp"
+            android:paddingBottom="4dp"
+            android:text="▸ 高级"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/ly_advanced"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/sw_thinking"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="启用思考模式（默认关 · 首字更快）"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="生成温度（本地/在线）"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <SeekBar
+                    android:id="@+id/sk_temperature"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:max="190" />
+
+                <TextView
+                    android:id="@+id/tv_temperature"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text="0.70"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Top P（本地/在线）"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <SeekBar
+                    android:id="@+id/sk_top_p"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:max="90" />
+
+                <TextView
+                    android:id="@+id/tv_top_p"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text="0.90"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="单轮最大输出 Tokens"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <SeekBar
+                    android:id="@+id/sk_max_tokens"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:max="496" />
+
+                <TextView
+                    android:id="@+id/tv_max_tokens"
+                    android:layout_width="44dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text="80"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="系统提示词（本地与在线共用）"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:paddingTop="16dp" />
+
+        <EditText
+            android:id="@+id/et_sys_prompt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:gravity="top"
+            android:hint="猫娘人设提示词…"
+            android:inputType="textMultiLine"
+            android:minLines="3"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="语音后端"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:paddingTop="16dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_tts_backend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rb_tts_local"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="本地"
+                android:textColor="@color/text_primary" />
+
+            <RadioButton
+                android:id="@+id/rb_tts_minimax"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:text="MiniMax"
+                android:textColor="@color/text_primary" />
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/et_minimax_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:hint="MiniMax API Key"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/et_minimax_voice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:hint="MiniMax 音色 id（如 female-shaonv）"
+            android:inputType="text"
+            android:maxLines="1"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_cancel"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="取消"
+                android:textColor="@color/text_secondary" />
+
+            <Button
+                android:id="@+id/btn_save"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="保存"
+                android:textColor="@color/accent_pink" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

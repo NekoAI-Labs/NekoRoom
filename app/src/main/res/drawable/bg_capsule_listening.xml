@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Same v3.3 capsule material with a restrained blue-violet listening tint. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="@color/voice_listening_fill_top"
+                android:endColor="@color/voice_listening_fill_bottom" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:startColor="#1A78B7FF"
+                android:centerColor="#149B8AFB"
+                android:endColor="#1AE0A0D1" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:startColor="#00FFFFFF"
+                android:endColor="@color/glass_sheen_top" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <item>
+        <bitmap android:src="@drawable/noise_tile" android:tileMode="repeat" android:alpha="0.04" />
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+            <stroke android:width="1dp" android:color="@color/voice_listening_edge" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+</layer-list>

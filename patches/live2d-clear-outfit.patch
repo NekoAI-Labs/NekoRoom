@@ -1,0 +1,164 @@
+--- a/src/main/cpp/LAppDelegate.hpp
++++ b/src/main/cpp/LAppDelegate.hpp
+@@ -24,6 +24,7 @@
+ 
+     // v0.5 M2 · Outfit channel（第二条 ExpressionManager，独立于 emotion）
+     bool changeOutfit = false;
++    bool clearOutfit = false;
+     std::string nextOutfitName = "";
+ 
+     float modelScale = 1.0f;               ///< モデル表示倍率
+@@ -158,6 +159,9 @@
+      */
+     void ApplyOutfit(const char* outfitName);
+ 
++    /** Stop the persistent outfit channel and return to the model base outfit. */
++    void ClearOutfit();
++
+     void NeedRenderBack(bool render);
+ 
+     void ModelResize(float scale);
+--- a/src/main/cpp/LAppDelegate.cpp
++++ b/src/main/cpp/LAppDelegate.cpp
+@@ -284,6 +284,14 @@
+     }
+ }
+ 
++void LAppDelegate::ClearOutfit()
++{
++    if (_view != NULL)
++    {
++        _view->ClearOutfit();
++    }
++}
++
+ void LAppDelegate::NeedRenderBack(bool render) {
+     if (_view != NULL)
+     {
+--- a/src/main/cpp/LAppView.hpp
++++ b/src/main/cpp/LAppView.hpp
+@@ -154,6 +154,8 @@
+ 
+     void ApplyOutfit(const char* outfitName);
+ 
++    void ClearOutfit();
++
+     void NeedRenderBack(bool needRender);
+ 
+     void Resize(float scale);
+--- a/src/main/cpp/LAppView.cpp
++++ b/src/main/cpp/LAppView.cpp
+@@ -270,6 +270,7 @@
+     Live2DManager->OnUpdate(_modelParameters);
+     _modelParameters.changeExpression = false;
+     _modelParameters.changeOutfit = false;
++    _modelParameters.clearOutfit = false;
+ 
+     // 关闭 scissor（Render 结尾清理，避免影响后续 on-screen 渲染）
+     if (_scissorBottom > 0.0f) {
+@@ -332,17 +333,8 @@
+         }
+         live2DManager->OnTap(x, y);
+ 
+-        // 歯車にタップしたか
+-        if (_gear->IsHit(pointX, pointY))
+-        {
+-            _changeModel = true;
+-        }
+-
+-        // 電源ボタンにタップしたか
+-        if (_power->IsHit(pointX, pointY))
+-        {
+-            LAppDelegate::GetInstance()->DeActivateApp();
+-        }
++        // Android chat UI owns settings and lifecycle controls. The sample gear/power
++        // sprites may be absent during Surface recreation, so never hit-test them here.
+     }
+ }
+ 
+@@ -467,9 +459,15 @@
+ 
+ void LAppView::ApplyOutfit(const char* outfitName) {
+     _modelParameters.changeOutfit = true;
++    _modelParameters.clearOutfit = false;
+     _modelParameters.nextOutfitName = outfitName;
+ }
+ 
++void LAppView::ClearOutfit() {
++    _modelParameters.changeOutfit = false;
++    _modelParameters.clearOutfit = true;
++}
++
+ void LAppView::NeedRenderBack(bool needRender) {
+     _needRenderBack = needRender;
+     __android_log_print(ANDROID_LOG_INFO, "MoeAvatar.Live2D", "native background render=%s",
+--- a/src/main/cpp/LAppModel.hpp
++++ b/src/main/cpp/LAppModel.hpp
+@@ -94,6 +94,9 @@
+      */
+     void SetOutfit(const Csm::csmChar* outfitID);
+ 
++    /** Stop the outfit expression manager so moc3 base parameters become visible again. */
++    void ClearOutfit();
++
+     /**
+      * @brief   ランダムに選ばれた表情モーションをセットする
+      *
+--- a/src/main/cpp/LAppModel.cpp
++++ b/src/main/cpp/LAppModel.cpp
+@@ -502,7 +502,10 @@
+         SetExpression(parameters.nextExpressionName.c_str());
+     }
+ 
+-    if (parameters.changeOutfit) {
++    if (parameters.clearOutfit) {
++        ClearOutfit();
++    }
++    else if (parameters.changeOutfit) {
+         if (_debugMode)
+         {
+             LAppPal::PrintLog("[APP]try start outfit: %s.", parameters.nextOutfitName.c_str());
+@@ -732,6 +735,18 @@
+     }
+ }
+ 
++void LAppModel::ClearOutfit()
++{
++    if (_debugMode)
++    {
++        LAppPal::PrintLog("[APP]clear outfit -> model default.");
++    }
++    if (_outfitExpressionManager != NULL)
++    {
++        _outfitExpressionManager->StopAllMotions();
++    }
++}
++
+ void LAppModel::SetRandomExpression()
+ {
+     if (_expressions.GetSize() == 0)
+--- a/src/main/cpp/JniBridgeC.cpp
++++ b/src/main/cpp/JniBridgeC.cpp
+@@ -190,6 +190,10 @@
+     env->ReleaseStringUTFChars(outfit_name, outfitName);
+ }
+ JNIEXPORT void JNICALL
++Java_com_chatwaifu_live2d_JniBridgeJava_nativeClearOutfit(JNIEnv *env, jclass clazz) {
++    LAppDelegate::GetInstance()->ClearOutfit();
++}
++JNIEXPORT void JNICALL
+ Java_com_chatwaifu_live2d_JniBridgeJava_needRenderBack(JNIEnv *env, jclass clazz, jboolean back) {
+     LAppDelegate::GetInstance()->NeedRenderBack(back == JNI_TRUE);
+ }
+--- a/src/main/java/com/chatwaifu/live2d/JniBridgeJava.java
++++ b/src/main/java/com/chatwaifu/live2d/JniBridgeJava.java
+@@ -55,6 +55,9 @@
+     /** v0.5 M2: outfit 通道，走独立 ExpressionManager，参数集不与 emotion 冲突。 */
+     public static native void nativeApplyOutfit(String outfitName);
+ 
++    /** Stop the persistent outfit channel and return to the model's base outfit. */
++    public static native void nativeClearOutfit();
++
+     public static native void needRenderBack(boolean back);
+ 
+     public static native void nativeProjectScale(float scale);

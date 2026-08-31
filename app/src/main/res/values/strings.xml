@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">NekoChat</string>
+    <string name="ai_generated_badge">AI 生成内容</string>
+    <string name="tts_title">TTS Demo · Bert-VITS2-MNN</string>
+    <string name="tts_status_idle">待机</string>
+    <string name="tts_status_init">初始化模型中…</string>
+    <string name="tts_status_ready">已就绪 · 可合成</string>
+    <string name="tts_status_init_failed">初始化失败</string>
+    <string name="tts_status_synth">合成中…</string>
+    <string name="tts_status_play">播放中</string>
+    <string name="tts_hint">输入要合成的句子，例如：你好，我是甘雨</string>
+    <string name="tts_label_speaker">音色</string>
+    <string name="tts_label_speed">语速</string>
+    <string name="tts_btn_synth">合成并播放</string>
+    <string name="tts_btn_stop">停止</string>
+    <string name="tts_btn_init">初始化引擎</string>
+    <string name="tts_err_empty">请输入文本</string>
+    <string name="tts_err_not_ready">引擎尚未初始化完成</string>
+    <string name="tts_err_synth">合成失败：%1$s</string>
+    <string name="voice_hold_to_talk">按住和猫娘说话...</string>
+    <string name="voice_release_or_cancel">松开发送 · 上滑取消</string>
+    <string name="voice_mode">语音模式</string>
+    <string name="text_chat_hint">和猫娘说说话...</string>
+    <string name="switch_to_text_input">切换到文字输入</string>
+</resources>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 「月夜猫娘」主题：3 色（淡粉 accent + 灰白文字 + 紫灰文字），其他靠 alpha/层级 -->
+
+    <!-- 背景层 -->
+    <color name="bg_deep">#FF252235</color>           <!-- 深紫灰，蒙版基底 / status bar / window 背景 -->
+    <color name="bg_dim_alpha">#73252235</color>      <!-- 房间图上的 45% 半透明蒙版 -->
+
+    <!-- 主色（限定 3 色之一）：按钮、蝴蝶结、点缀 -->
+    <color name="accent_pink">#FFD9A6BC</color>
+    <color name="accent_pink_dim">#FFF0C6D7</color>   <!-- 高光、perf 圆点 -->
+
+    <!-- 文字三档（限定 3 色之二：灰白 + 紫灰） -->
+    <color name="text_primary">#FFF5EEF5</color>      <!-- 主文字：当前字幕、EditText 输入 -->
+    <color name="text_secondary">#FFC8BFD0</color>    <!-- 次文字：历史字幕、标签 -->
+    <color name="text_tertiary">#FF91879B</color>     <!-- 辅助：占位符、用户消息 chip -->
+    <color name="perf_text">#FFAFA6BD</color>         <!-- 性能小字（深紫灰底专用） -->
+
+    <!-- 毛玻璃（限定 3 色之三：alpha 透明） -->
+    <color name="frost_surface">#26FFF5FA</color>     <!-- 0.15 alpha 乳白 -->
+    <color name="frost_surface_weak">#1AFFF5FA</color><!-- 0.10 alpha：API31+ blur 后用更弱底色 -->
+    <color name="frost_border">#33FFFFFF</color>      <!-- 0.20 alpha 边线 -->
+
+    <!-- 玻璃态（v3.3 暗玻璃 dark subtle glass：深色 Fill + 细高光 + 弱描边 + 黑色悬浮阴影）。
+         真·blur 做不到（GLSurface 约束），靠深 Fill 撑质感。可读性不够就调高 glass_fill* 的 alpha。 -->
+    <color name="glass_fill_top">#941C1824</color>    <!-- rgba(28,24,36,0.58) 顶部黑紫 -->
+    <color name="glass_fill_bottom">#A6121018</color> <!-- rgba(18,16,24,0.65) 底部更深 -->
+    <color name="glass_sheen_top">#14FFFFFF</color>   <!-- 0.08 顶部细高光 -->
+    <color name="glass_edge">#1AFFFFFF</color>        <!-- 0.10 1px 内描边 -->
+    <color name="glass_shadow">#33000000</color>      <!-- 0.20 黑色悬浮阴影 -->
+    <color name="glass_fill">#A61C1824</color>        <!-- 0.65 齿轮 scrim（同调，略提可读） -->
+    <color name="glass_glow">#66D9A6BC</color>        <!-- 0.40 粉紫，outlineSpotShadowColor 彩色发光（历史保留） -->
+
+    <!-- 错误提示（导入校验失败等）：柔和的珊瑚红，与暗紫主题协调不刺眼 -->
+    <color name="error_red">#FFFF8A9B</color>
+
+    <!-- V0.6 voice interaction: confined to the existing input capsule. -->
+    <color name="voice_blue">#FF78B7FF</color>
+    <color name="voice_purple">#FF9B8AFB</color>
+    <color name="voice_pink">#FFE0A0D1</color>
+    <color name="voice_listening_fill_top">#A21B2137</color>
+    <color name="voice_listening_fill_bottom">#B0121423</color>
+    <color name="voice_listening_edge">#667F9CFF</color>
+    <color name="voice_cancel">#FFFF778B</color>
+    <color name="voice_cancel_soft">#FFFFA0AD</color>
+    <color name="voice_cancel_fill_top">#A2351C2A</color>
+    <color name="voice_cancel_fill_bottom">#B01E121B</color>
+</resources>

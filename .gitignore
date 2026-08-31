@@ -37,6 +37,29 @@ captures/
 *.apk
 *.aab
 
+# Native binaries and model files
+*.so
+*.a
+*.lib
+*.dylib
+*.dll
+*.bundle
+*.mnn
+*.onnx
+*.bin
+*.wav
+experiments/**/output/
+
+# Live2D role placeholders keep their original names without shipping assets.
+*.moc3
+*.cmo3
+*.can3
+**/Live2DModels/**/*.png
+!live2d/src/main/assets/Live2DModels/**/*.png
+!live2d/src/main/assets/Live2DModels/**/*.moc3
+!live2d/src/main/assets/Live2DModels/**/*.cmo3
+!live2d/src/main/assets/Live2DModels/**/*.can3
+
 # JavaScript / Node
 node_modules/
 npm-debug.log*

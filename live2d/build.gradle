@@ -1,0 +1,52 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.chatwaifu.live2d'
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
+
+        consumerProguardFiles "consumer-rules.pro"
+        ndk{
+            abiFilters 'arm64-v8a'
+        }
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++11'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+            version '3.18.1'
+        }
+    }
+
+    // Cubism SDK5 loads its GLSL programs through the app asset loader at
+    // runtime.  They are not Android resources, so include the source folder
+    // explicitly or the renderer aborts while loading VertShaderSrcCopy.vert.
+    sourceSets {
+        main {
+            assets.srcDirs += [
+                'src/SDKRoot/Framework/src/Rendering/OpenGL/Shaders/StandardES'
+            ]
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+}

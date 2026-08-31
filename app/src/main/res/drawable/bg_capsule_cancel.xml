@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cancellation state keeps the glass material and changes only its restrained tint. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="@color/voice_cancel_fill_top"
+                android:endColor="@color/voice_cancel_fill_bottom" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:startColor="#00FFFFFF"
+                android:endColor="@color/glass_sheen_top" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <item>
+        <bitmap android:src="@drawable/noise_tile" android:tileMode="repeat" android:alpha="0.04" />
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+            <stroke android:width="1dp" android:color="#66FF778B" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+</layer-list>
